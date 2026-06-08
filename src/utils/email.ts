@@ -141,3 +141,25 @@ export const sendReactivationEmail = async (
   `;
   return sendEmail(ownerEmail, "TableFlow — Account Reactivated", html);
 };
+
+export const sendStaffWelcomeEmail = async (
+  staffEmail: string,
+  staffName: string,
+  restaurantName: string,
+  tempPassword: string
+): Promise<void> => {
+  const html = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+      <h2 style="color: #2c3e50;">Welcome to TableFlow, ${staffName}!</h2>
+      <p>Your staff account for <strong>${restaurantName}</strong> has been successfully created.</p>
+      <p>You can access the portal and log in using the credentials below:</p>
+      <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 20px 0; border-left: 4px solid #2980b9;">
+        <p style="margin: 5px 0;"><strong>Username / Email:</strong> ${staffEmail}</p>
+        <p style="margin: 5px 0;"><strong>Temporary Password:</strong> <code style="font-size: 1.2em; color: #e74c3c;">${tempPassword}</code></p>
+      </div>
+      <p style="color: #7f8c8d;"><em>Important: You will be required to change this temporary password immediately upon your first login.</em></p>
+      <p>Best regards,<br/>The TableFlow Team</p>
+    </div>
+  `;
+  return sendEmail(staffEmail, "TableFlow — Your Staff Account", html);
+};
