@@ -12,6 +12,7 @@ const envSchema = z.object({
   SUPERADMIN_JWT_SECRET: z.string().min(1),
   SUPERADMIN_JWT_EXPIRY: z.string().default("4h"),
   BCRYPT_SALT_ROUNDS: z.string().default("12"),
+  SUPERADMIN_EMAIL: z.string().email().default("superadmin@tableflow.com"),
   SMTP_HOST: z.string().min(1),
   SMTP_PORT: z.string().default("587"),
   SMTP_USER: z.string().min(1),

@@ -6,6 +6,7 @@ import { createServer } from "http";
 import { connectDB } from "./config/db";
 import { env } from "./config/env";
 import { errorHandler } from "./middleware/errorHandler";
+import superAdminAuthRouter from "./routes/superadmin/auth.routes";
 
 const app = express();
 const httpServer = createServer(app);
@@ -20,6 +21,9 @@ app.use(express.json());
 app.get("/health", (req, res) => {
   res.json({ success: true, message: "TableFlow API running" });
 });
+
+// Routes
+app.use("/api/superadmin/auth", superAdminAuthRouter);
 
 // Error handler (last eke thiyanawa)
 app.use(errorHandler);
