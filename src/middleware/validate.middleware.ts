@@ -34,7 +34,7 @@ export const validateQuery = (schema: ZodSchema): RequestHandler => {
       });
       return;
     }
-    req.query = result.data;
+    req.query = result.data as any;
     next();
   };
 };
@@ -53,7 +53,7 @@ export const validateParams = (schema: ZodSchema): RequestHandler => {
       });
       return;
     }
-    req.params = result.data;
+    req.params = result.data as any;
     next();
   };
 };
