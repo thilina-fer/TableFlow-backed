@@ -7,6 +7,8 @@ import { connectDB } from "./config/db";
 import { env } from "./config/env";
 import { errorHandler } from "./middleware/errorHandler";
 import superAdminAuthRouter from "./routes/superadmin/auth.routes";
+import registerRouter from "./routes/public/register.routes";
+import registrationsRouter from "./routes/superadmin/registrations.routes";
 
 const app = express();
 const httpServer = createServer(app);
@@ -24,6 +26,8 @@ app.get("/health", (req, res) => {
 
 // Routes
 app.use("/api/superadmin/auth", superAdminAuthRouter);
+app.use("/api/register", registerRouter);
+app.use("/api/superadmin/registrations", registrationsRouter);
 
 // Error handler (last eke thiyanawa)
 app.use(errorHandler);
