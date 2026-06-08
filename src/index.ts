@@ -14,14 +14,23 @@ import categoriesRouter from "./routes/restaurant/category.routes";
 import { adminMenuRouter, publicMenuRouter } from "./routes/restaurant/menuItem.routes";
 import tablesRouter from "./routes/restaurant/table.routes";
 import staffRouter from "./routes/restaurant/staff.routes";
+import orderPublicRouter from "./routes/public/order.routes";
+import paymentPublicRouter from "./routes/public/payment.routes";
+import kitchenRouter from "./routes/restaurant/kitchen.routes";
+import waiterRouter from "./routes/restaurant/waiter.routes";
+import cashierRouter from "./routes/restaurant/cashier.routes";
+import { initSocket } from "./sockets/socket";
 
 const app = express();
 const httpServer = createServer(app);
+initSocket(httpServer);
 
 // Middleware
 app.use(helmet());
 app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
 app.use(morgan("dev"));
+// stripe webhook demands raw payload for signature verification
+app.use("/api/payment/webhook", express.raw({ type: "application/json" }));
 app.use(express.json());
 
 // Health check
@@ -39,6 +48,11 @@ app.use("/api/admin/menu", adminMenuRouter);
 app.use("/api", publicMenuRouter);
 app.use("/api/tables", tablesRouter);
 app.use("/api/admin/staff", staffRouter);
+app.use("/api/orders", orderPublicRouter);
+app.use("/api/payment", paymentPublicRouter);
+app.use("/api/kitchen", kitchenRouter);
+app.use("/api/waiter", waiterRouter);
+app.use("/api/cashier", cashierRouter);
 
 // Error handler (last eke thiyanawa)
 app.use(errorHandler);
