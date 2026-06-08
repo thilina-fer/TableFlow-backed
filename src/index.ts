@@ -1,0 +1,34 @@
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import { createServer } from "http";
+import { connectDB } from "./config/db";
+import { env } from "./config/env";
+import { errorHandler } from "./middleware/errorHandler";
+
+const app = express();
+const httpServer = createServer(app);
+
+// Middleware
+app.use(helmet());
+app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
+app.use(morgan("dev"));
+app.use(express.json());
+
+// Health check
+app.get("/health", (req, res) => {
+  res.json({ success: true, message: "TableFlow API running" });
+});
+
+// Error handler (last eke thiyanawa)
+app.use(errorHandler);
+
+const start = async () => {
+  await connectDB();
+  httpServer.listen(env.PORT, () => {
+    console.log(`Server running on port ${env.PORT}`);
+  });
+};
+
+start();
