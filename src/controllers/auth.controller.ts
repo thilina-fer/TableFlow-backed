@@ -203,9 +203,21 @@ export const changePassword = async (
     user.isFirstLogin = false;
     await user.save();
 
+    // 3. Generate new access token
+    const payload = {
+      userId: user._id.toString(),
+      role: user.role,
+      restaurantId: user.restaurantId.toString(),
+      isFirstLogin: false,
+    };
+    const accessToken = signAccessToken(payload);
+
     res.status(200).json({
       success: true,
       message: "Password changed successfully",
+      data: {
+        accessToken,
+      },
     });
   } catch (error) {
     next(error);
