@@ -24,6 +24,9 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().url(),
   TAX_RATE: z.string().default("0.1"),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  CLOUDINARY_CLOUD_NAME: z.string().min(1).default("dummy_cloud"),
+  CLOUDINARY_API_KEY: z.string().min(1).default("dummy_key"),
+  CLOUDINARY_API_SECRET: z.string().min(1).default("dummy_secret"),
 });
 
 const parsed = envSchema.safeParse(process.env);

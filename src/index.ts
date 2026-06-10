@@ -8,6 +8,7 @@ import { env } from "./config/env";
 import { errorHandler } from "./middleware/errorHandler";
 import superAdminAuthRouter from "./routes/superadmin/auth.routes";
 import registerRouter from "./routes/public/register.routes";
+import uploadRouter from "./routes/public/upload.routes";
 import registrationsRouter from "./routes/superadmin/registrations.routes";
 import staffAuthRouter from "./routes/restaurant/auth.routes";
 import categoriesRouter from "./routes/restaurant/category.routes";
@@ -41,6 +42,7 @@ app.get("/health", (req, res) => {
 // Routes
 app.use("/api/superadmin/auth", superAdminAuthRouter);
 app.use("/api/register", registerRouter);
+app.use("/api/upload", uploadRouter);
 app.use("/api/superadmin/registrations", registrationsRouter);
 app.use("/api/auth", staffAuthRouter);
 app.use("/api/admin/categories", categoriesRouter);
