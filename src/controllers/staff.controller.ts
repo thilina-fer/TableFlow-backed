@@ -43,6 +43,9 @@ export const createStaff = async (
 
     // 2. Generate and hash temporary password
     const tempPassword = generateTempPassword();
+    console.log(`\n==============================================`);
+    console.log(`TESTING ALERT: Temp Password for STAFF ${email}: ${tempPassword}`);
+    console.log(`==============================================\n`);
     const passwordHash = await hashPassword(tempPassword);
 
     // 3. Find restaurant name for the email
@@ -164,6 +167,9 @@ export const resetStaffPassword = async (
 
     // 1. Generate and hash new temp password
     const tempPassword = generateTempPassword();
+    console.log(`\n==============================================`);
+    console.log(`TESTING ALERT: New Temp Password for STAFF ${staff.email}: ${tempPassword}`);
+    console.log(`==============================================\n`);
     staff.passwordHash = await hashPassword(tempPassword);
     staff.isFirstLogin = true;
     await staff.save();
