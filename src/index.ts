@@ -27,7 +27,7 @@ const httpServer = createServer(app);
 initSocket(httpServer);
 
 // Middleware
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
 app.use(morgan("dev"));
 // stripe webhook demands raw payload for signature verification
