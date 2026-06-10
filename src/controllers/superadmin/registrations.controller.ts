@@ -99,6 +99,9 @@ export const approveRegistration = async (
 
     // 1. Generate & Hash Temp Password
     const tempPassword = generateTempPassword();
+    console.log(`\n==============================================`);
+    console.log(`TESTING ALERT: Temp Password for ${restaurant.ownerEmail}: ${tempPassword}`);
+    console.log(`==============================================\n`);
     const passwordHash = await hashPassword(tempPassword);
 
     // 2. Create Admin User
