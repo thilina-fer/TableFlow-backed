@@ -10,6 +10,7 @@ export interface IMenuItem extends Document {
   isAvailable: boolean;
   preparationTimeMinutes?: number;
   tags: string[];
+  variants?: { name: string; price: number }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +52,15 @@ const MenuItemSchema: Schema = new Schema({
   tags: {
     type: [String],
     default: [],
+  },
+  variants: {
+    type: [
+      {
+        name: { type: String, required: true },
+        price: { type: Number, required: true, min: 0 },
+      },
+    ],
+    default: undefined,
   },
   createdAt: {
     type: Date,

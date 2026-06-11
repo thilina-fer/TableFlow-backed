@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IOrderItem {
   menuItemId: mongoose.Types.ObjectId;
   name: string;
+  variantName?: string;
   quantity: number;
   price: number;
   subtotal: number;
@@ -36,6 +37,9 @@ const OrderItemSchema = new Schema({
   name: {
     type: String,
     required: true,
+  },
+  variantName: {
+    type: String,
   },
   quantity: {
     type: Number,
