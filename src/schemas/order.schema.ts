@@ -9,6 +9,7 @@ export const placeOrderSchema = z.object({
     .array(
       z.object({
         menuItemId: z.string().regex(objectIdRegex, "Invalid menuItemId format"),
+        variantName: z.string().optional(),
         quantity: z.number().int().min(1, "Quantity must be at least 1"),
       })
     )
