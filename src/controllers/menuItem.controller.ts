@@ -50,6 +50,7 @@ export const createMenuItem = async (
       isAvailable,
       preparationTimeMinutes,
       tags,
+      variants,
     } = req.body;
 
     // Verify category belongs to this restaurant
@@ -70,6 +71,7 @@ export const createMenuItem = async (
       isAvailable,
       preparationTimeMinutes,
       tags,
+      variants,
     });
 
     res.status(201).json({
