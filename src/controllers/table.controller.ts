@@ -179,7 +179,7 @@ export const getTableMenuEntry = async (
   try {
     const { tableId } = req.params;
 
-    const table = await Table.findById(tableId);
+    const table = await Table.findById(tableId).populate("restaurantId", "name");
     if (!table) {
       const err = new Error("Table not found") as AppError;
       err.statusCode = 404;
@@ -190,7 +190,8 @@ export const getTableMenuEntry = async (
       success: true,
       data: {
         tableId: table._id,
-        restaurantId: table.restaurantId,
+        restaurantId: (table.restaurantId as any)._id || table.restaurantId,
+        restaurantName: (table.restaurantId as any).name || "Restaurant",
         tableNumber: table.tableNumber,
       },
     });

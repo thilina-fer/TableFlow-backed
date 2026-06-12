@@ -178,6 +178,27 @@ export const getKitchenOrders = async (
   }
 };
 
+export const getKitchenHistory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const restaurantId = req.user!.restaurantId;
+    const orders = await Order.find({
+      restaurantId,
+      status: { $in: ["completed", "delivered", "rejected"] },
+    }).sort({ updatedAt: -1 }).limit(50); // limit to 50 for performance
+
+    res.status(200).json({
+      success: true,
+      data: orders,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const approveOrder = async (
   req: Request,
   res: Response,
@@ -334,6 +355,29 @@ export const getWaiterOrders = async (
       restaurantId,
       status: { $in: ["completed", "delivered"] },
     }).sort({ updatedAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: orders,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getWaiterHistory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const restaurantId = req.user!.restaurantId;
+    const waiterId = req.user!.userId;
+    const orders = await Order.find({
+      restaurantId,
+      assignedWaiterId: waiterId as any,
+      status: "delivered",
+    }).sort({ updatedAt: -1 }).limit(50);
 
     res.status(200).json({
       success: true,
