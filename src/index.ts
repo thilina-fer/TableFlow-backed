@@ -20,6 +20,7 @@ import paymentPublicRouter from "./routes/public/payment.routes";
 import kitchenRouter from "./routes/restaurant/kitchen.routes";
 import waiterRouter from "./routes/restaurant/waiter.routes";
 import cashierRouter from "./routes/restaurant/cashier.routes";
+import analyticsRouter from "./routes/restaurant/analytics.routes";
 import { initSocket } from "./sockets/socket";
 
 const app = express();
@@ -28,7 +29,7 @@ initSocket(httpServer);
 
 // Middleware
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
-app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
+app.use(cors({ origin: [env.FRONTEND_URL, "http://localhost:5173", "http://127.0.0.1:5173"], credentials: true }));
 app.use(morgan("dev"));
 // stripe webhook demands raw payload for signature verification
 app.use("/api/payment/webhook", express.raw({ type: "application/json" }));
@@ -47,6 +48,7 @@ app.use("/api/superadmin/registrations", registrationsRouter);
 app.use("/api/auth", staffAuthRouter);
 app.use("/api/admin/categories", categoriesRouter);
 app.use("/api/admin/menu", adminMenuRouter);
+app.use("/api/admin/analytics", analyticsRouter);
 app.use("/api", publicMenuRouter);
 app.use("/api/tables", tablesRouter);
 app.use("/api/admin/staff", staffRouter);
