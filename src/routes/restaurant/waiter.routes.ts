@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   getWaiterOrders,
+  getWaiterHistory,
   claimOrder,
   deliverOrder,
 } from "../../controllers/order.controller";
@@ -19,6 +20,7 @@ const waiterAuthChain = [
 ];
 
 router.get("/", waiterAuthChain, getWaiterOrders);
+router.get("/history", waiterAuthChain, getWaiterHistory);
 router.put("/:id/claim", waiterAuthChain, claimOrder);
 router.put("/:id/deliver", waiterAuthChain, deliverOrder);
 

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   getKitchenOrders,
+  getKitchenHistory,
   approveOrder,
   rejectOrder,
   completeOrder,
@@ -23,6 +24,7 @@ const kitchenAuthChain = [
 ];
 
 router.get("/", kitchenAuthChain, getKitchenOrders);
+router.get("/history", kitchenAuthChain, getKitchenHistory);
 router.put("/:id/approve", kitchenAuthChain, approveOrder);
 router.put("/:id/reject", kitchenAuthChain, validateBody(rejectOrderSchema), rejectOrder);
 router.put("/:id/complete", kitchenAuthChain, completeOrder);
