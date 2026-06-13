@@ -35,9 +35,9 @@ export const generateReceiptPDF = (
       // Table Headers
       const startX = 30;
       const colWidths = {
-        name: 120,
-        qty: 30,
-        price: 50,
+        name: 100,
+        qty: 25,
+        price: 55,
         total: 55,
       };
 
@@ -64,11 +64,11 @@ export const generateReceiptPDF = (
           align: "right",
           width: colWidths.qty,
         });
-        doc.text(`$${item.price.toFixed(2)}`, startX + colWidths.name + colWidths.qty, currentY, {
+        doc.text(`LKR ${item.price.toFixed(2)}`, startX + colWidths.name + colWidths.qty, currentY, {
           align: "right",
           width: colWidths.price,
         });
-        doc.text(`$${item.subtotal.toFixed(2)}`, startX + colWidths.name + colWidths.qty + colWidths.price, currentY, {
+        doc.text(`LKR ${item.subtotal.toFixed(2)}`, startX + colWidths.name + colWidths.qty + colWidths.price, currentY, {
           align: "right",
           width: colWidths.total,
         });
@@ -86,17 +86,17 @@ export const generateReceiptPDF = (
 
       const subtotalY = doc.y;
       doc.font("Helvetica-Bold").text("Subtotal:", endAlignX, subtotalY, { align: "left" });
-      doc.font("Helvetica").text(`$${order.subtotal.toFixed(2)}`, endAlignX, subtotalY, { align: "right", width: rightColWidth });
+      doc.font("Helvetica").text(`LKR ${order.subtotal.toFixed(2)}`, endAlignX, subtotalY, { align: "right", width: rightColWidth });
       doc.moveDown(0.2);
 
       const taxY = doc.y;
       doc.font("Helvetica-Bold").text("Tax:", endAlignX, taxY, { align: "left" });
-      doc.font("Helvetica").text(`$${order.taxAmount.toFixed(2)}`, endAlignX, taxY, { align: "right", width: rightColWidth });
+      doc.font("Helvetica").text(`LKR ${order.taxAmount.toFixed(2)}`, endAlignX, taxY, { align: "right", width: rightColWidth });
       doc.moveDown(0.2);
 
       const totalY = doc.y;
       doc.font("Helvetica-Bold").fontSize(9).text("Total Amount:", endAlignX, totalY, { align: "left" });
-      doc.text(`$${order.totalAmount.toFixed(2)}`, endAlignX, totalY, { align: "right", width: rightColWidth });
+      doc.text(`LKR ${order.totalAmount.toFixed(2)}`, endAlignX, totalY, { align: "right", width: rightColWidth });
       doc.moveDown(1.5);
 
       // Footer
