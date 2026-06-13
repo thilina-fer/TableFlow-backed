@@ -67,7 +67,7 @@ export const createPaymentIntent = async (
 
     // Check for mock mode
     if (env.STRIPE_SECRET_KEY === "sk_test_xxx") {
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
         data: {
           clientSecret: "mock_secret",
@@ -75,6 +75,7 @@ export const createPaymentIntent = async (
           isMock: true,
         },
       });
+      return;
     }
 
     // Amount in cents
