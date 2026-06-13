@@ -65,6 +65,18 @@ export const createPaymentIntent = async (
       throw err;
     }
 
+    // Check for mock mode
+    if (env.STRIPE_SECRET_KEY === "sk_test_xxx") {
+      return res.status(200).json({
+        success: true,
+        data: {
+          clientSecret: "mock_secret",
+          stripePaymentIntentId: "mock_intent",
+          isMock: true,
+        },
+      });
+    }
+
     // Amount in cents
     const amountInCents = Math.round(order.totalAmount * 100);
 
@@ -89,7 +101,12 @@ export const createPaymentIntent = async (
         stripePaymentIntentId: paymentIntent.id,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.statusCode === 401) {
+      // Prevent Stripe 401 errors from triggering the frontend auth logout
+      error.statusCode = 400;
+      error.message = "Stripe Authentication Error: Please check your Stripe API keys.";
+    }
     next(error);
   }
 };
@@ -191,5 +208,56 @@ export const stripeWebhook = async (
   } catch (error) {
     console.error("Error processing Stripe webhook event:", error);
     res.status(500).json({ error: "Internal Server Error during webhook processing" });
+  }
+};
+
+export const mockPaymentSuccess = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { orderId } = req.body;
+    const order = await Order.findById(orderId);
+    
+    if (!order) {
+      const err = new Error("Order not found") as AppError;
+      err.statusCode = 404;
+      throw err;
+    }
+
+    order.paymentStatus = "paid";
+    await order.save();
+
+    // Free the table
+    const table = await Table.findById(order.tableId);
+    if (table && table.currentOrderId?.toString() === order._id.toString()) {
+      table.status = "available";
+      table.currentOrderId = undefined;
+      await table.save();
+    }
+
+    // Create payment entry
+    const payment = new Payment({
+      restaurantId: order.restaurantId,
+      orderId: order._id,
+      amount: order.totalAmount,
+      paymentMethod: "card",
+      status: "succeeded",
+      stripePaymentIntentId: "mock_pi_" + Date.now(),
+      stripeEventId: "mock_evt_" + Date.now(),
+      rawStripeData: { mock: true },
+    });
+    await payment.save();
+
+    // Broadcast state changes
+    broadcastOrderUpdate(order.restaurantId.toString(), order);
+
+    res.status(200).json({
+      success: true,
+      message: "Mock payment successful",
+    });
+  } catch (error) {
+    next(error);
   }
 };

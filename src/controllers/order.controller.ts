@@ -111,6 +111,7 @@ export const placeOrder = async (
     });
 
     await order.save();
+    await order.populate("tableId");
 
     // 4. Update table status
     table.status = "occupied";
@@ -153,6 +154,46 @@ export const getOrderById = async (
   }
 };
 
+export const downloadPublicBill = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const order = await Order.findById(id);
+    if (!order) {
+      const err = new Error("Order not found") as AppError;
+      err.statusCode = 404;
+      throw err;
+    }
+
+    if (!order.billPdfUrl) {
+      const restaurant = await Restaurant.findById(order.restaurantId);
+      const table = await Table.findById(order.tableId);
+      if (restaurant && table) {
+        const pdfBuffer = await generateReceiptPDF(order, restaurant.name, table.tableNumber);
+        order.billPdfUrl = `data:application/pdf;base64,${pdfBuffer.toString("base64")}`;
+        await order.save();
+      } else {
+        const err = new Error("Bill has not been generated for this order yet") as AppError;
+        err.statusCode = 400;
+        throw err;
+      }
+    }
+
+    const base64Data = order.billPdfUrl.split(",")[1];
+    const pdfBuffer = Buffer.from(base64Data, "base64");
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename=receipt-${order._id.toString().slice(-6)}.pdf`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ==========================================
 // KITCHEN CONTROLLERS
 // ==========================================
@@ -167,7 +208,7 @@ export const getKitchenOrders = async (
     const orders = await Order.find({
       restaurantId,
       status: { $in: ["placed", "preparing"] },
-    }).sort({ createdAt: 1 });
+    }).sort({ createdAt: 1 }).populate("tableId");
 
     res.status(200).json({
       success: true,
@@ -188,7 +229,7 @@ export const getKitchenHistory = async (
     const orders = await Order.find({
       restaurantId,
       status: { $in: ["completed", "delivered", "rejected"] },
-    }).sort({ updatedAt: -1 }).limit(50); // limit to 50 for performance
+    }).sort({ updatedAt: -1 }).limit(50).populate("tableId"); // limit to 50 for performance
 
     res.status(200).json({
       success: true,
@@ -208,7 +249,7 @@ export const approveOrder = async (
     const restaurantId = req.user!.restaurantId;
     const { id } = req.params;
 
-    const order = await Order.findOne({ _id: id, restaurantId });
+    const order = await Order.findOne({ _id: id, restaurantId }).populate("tableId");
     if (!order) {
       const err = new Error("Order not found") as AppError;
       err.statusCode = 404;
@@ -263,7 +304,7 @@ export const rejectOrder = async (
     const validated = rejectOrderSchema.parse(req.body);
     const { rejectionReason } = validated;
 
-    const order = await Order.findOne({ _id: id, restaurantId });
+    const order = await Order.findOne({ _id: id, restaurantId }).populate("tableId");
     if (!order) {
       const err = new Error("Order not found") as AppError;
       err.statusCode = 404;
@@ -311,7 +352,7 @@ export const completeOrder = async (
     const restaurantId = req.user!.restaurantId;
     const { id } = req.params;
 
-    const order = await Order.findOne({ _id: id, restaurantId });
+    const order = await Order.findOne({ _id: id, restaurantId }).populate("tableId");
     if (!order) {
       const err = new Error("Order not found") as AppError;
       err.statusCode = 404;
@@ -354,7 +395,7 @@ export const getWaiterOrders = async (
     const orders = await Order.find({
       restaurantId,
       status: { $in: ["completed", "delivered"] },
-    }).sort({ updatedAt: -1 });
+    }).sort({ updatedAt: -1 }).populate("tableId");
 
     res.status(200).json({
       success: true,
@@ -377,7 +418,7 @@ export const getWaiterHistory = async (
       restaurantId,
       assignedWaiterId: waiterId as any,
       status: "delivered",
-    }).sort({ updatedAt: -1 }).limit(50);
+    }).sort({ updatedAt: -1 }).limit(50).populate("tableId");
 
     res.status(200).json({
       success: true,
@@ -398,7 +439,7 @@ export const claimOrder = async (
     const waiterId = req.user!.userId;
     const { id } = req.params;
 
-    const order = await Order.findOne({ _id: id, restaurantId });
+    const order = await Order.findOne({ _id: id, restaurantId }).populate("tableId");
     if (!order) {
       const err = new Error("Order not found") as AppError;
       err.statusCode = 404;
@@ -436,7 +477,7 @@ export const deliverOrder = async (
     const restaurantId = req.user!.restaurantId;
     const { id } = req.params;
 
-    const order = await Order.findOne({ _id: id, restaurantId });
+    const order = await Order.findOne({ _id: id, restaurantId }).populate("tableId");
     if (!order) {
       const err = new Error("Order not found") as AppError;
       err.statusCode = 404;
@@ -488,7 +529,7 @@ export const getCashierOrders = async (
       restaurantId,
       status: "delivered",
       paymentStatus: "pending",
-    }).sort({ updatedAt: -1 });
+    }).sort({ updatedAt: -1 }).populate("tableId");
 
     res.status(200).json({
       success: true,
@@ -508,7 +549,7 @@ export const markCashPayment = async (
     const restaurantId = req.user!.restaurantId;
     const { id } = req.params;
 
-    const order = await Order.findOne({ _id: id, restaurantId });
+    const order = await Order.findOne({ _id: id, restaurantId }).populate("tableId");
     if (!order) {
       const err = new Error("Order not found") as AppError;
       err.statusCode = 404;
@@ -574,9 +615,17 @@ export const downloadBill = async (
     }
 
     if (!order.billPdfUrl) {
-      const err = new Error("Bill has not been generated for this order yet") as AppError;
-      err.statusCode = 400;
-      throw err;
+      const restaurant = await Restaurant.findById(order.restaurantId);
+      const table = await Table.findById(order.tableId);
+      if (restaurant && table) {
+        const pdfBuffer = await generateReceiptPDF(order, restaurant.name, table.tableNumber);
+        order.billPdfUrl = `data:application/pdf;base64,${pdfBuffer.toString("base64")}`;
+        await order.save();
+      } else {
+        const err = new Error("Bill has not been generated for this order yet") as AppError;
+        err.statusCode = 400;
+        throw err;
+      }
     }
 
     const base64Data = order.billPdfUrl.split(",")[1];
