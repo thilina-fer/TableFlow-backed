@@ -71,7 +71,7 @@ app.use(errorHandler);
 
 const start = async () => {
   await connectDB();
-  httpServer.listen(env.PORT, () => {
+  httpServer.listen(Number(env.PORT), "0.0.0.0", () => {
     console.log(`Server running on port ${env.PORT}`);
   });
 };
