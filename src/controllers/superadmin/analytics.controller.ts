@@ -4,21 +4,21 @@ import { Restaurant } from "../../models/Restaurant.model";
 
 export const getSuperAdminSummary = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const totalRestaurants = await Restaurant.countDocuments();
-    const totalOrders = await Order.countDocuments();
-    
-    // Total Revenue (all paid orders)
-    const orders = await Order.find({ paymentStatus: 'paid' });
-    const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
 
-    // New Registrations this month
-    const thisMonth = new Date();
-    thisMonth.setDate(1);
-    thisMonth.setHours(0, 0, 0, 0);
+    const [totalRestaurants, totalOrders, revenueAgg, newRegistrationsThisMonth] = await Promise.all([
+      Restaurant.countDocuments({ status: "approved" }),
+      Order.countDocuments({}),
+      Order.aggregate([
+        { $match: { paymentStatus: "paid" } },
+        { $group: { _id: null, totalRevenue: { $sum: "$totalAmount" } } }
+      ]),
+      Restaurant.countDocuments({ createdAt: { $gte: startOfMonth } })
+    ]);
 
-    const newRegistrationsThisMonth = await Restaurant.countDocuments({
-      createdAt: { $gte: thisMonth }
-    });
+    const totalRevenue = revenueAgg[0]?.totalRevenue || 0;
 
     res.status(200).json({
       success: true,
@@ -36,35 +36,12 @@ export const getSuperAdminSummary = async (req: Request, res: Response, next: Ne
 
 export const getRegistrationGrowth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const restaurants = await Restaurant.find();
-
-    const monthCounts = new Map<string, number>();
-    
-    // Initialize last 6 months (optional)
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date();
-      d.setMonth(d.getMonth() - i);
-      const monthStr = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-      monthCounts.set(monthStr, 0);
-    }
-
-    restaurants.forEach(rest => {
-      const monthStr = rest.createdAt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-      if (monthCounts.has(monthStr)) {
-        monthCounts.set(monthStr, monthCounts.get(monthStr)! + 1);
-      } else {
-        // If it's an older month, we can either ignore or add it
-        // We'll just add it for now and maybe sort later
-        monthCounts.set(monthStr, (monthCounts.get(monthStr) || 0) + 1);
-      }
-    });
-
-    // Create an array and sort by actual Date objects
-    const data = Array.from(monthCounts.entries()).map(([month, count]) => {
-      return { month, count, _date: new Date(month) };
-    })
-    .sort((a, b) => a._date.getTime() - b._date.getTime())
-    .map(({ month, count }) => ({ month, count }));
+    const data = await Restaurant.aggregate([
+      { $group: { _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } }, count: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+      { $limit: 12 },
+      { $project: { month: "$_id", count: 1, _id: 0 } }
+    ]);
 
     res.status(200).json({ success: true, data });
   } catch (error) {
@@ -74,26 +51,14 @@ export const getRegistrationGrowth = async (req: Request, res: Response, next: N
 
 export const getOrdersPerRestaurant = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    // We need to aggregate orders by restaurant
-    const orders = await Order.find({ paymentStatus: 'paid' }).populate('restaurantId');
-    
-    const restMap = new Map<string, { orders: number; revenue: number }>();
-
-    orders.forEach(order => {
-      const restName = (order.restaurantId as any)?.name || 'Unknown Restaurant';
-      if (!restMap.has(restName)) {
-        restMap.set(restName, { orders: 0, revenue: 0 });
-      }
-      const data = restMap.get(restName)!;
-      data.orders += 1;
-      data.revenue += order.totalAmount;
-    });
-
-    const data = Array.from(restMap.entries()).map(([restaurantName, stats]) => ({
-      restaurantName,
-      orders: stats.orders,
-      revenue: stats.revenue
-    }));
+    const data = await Order.aggregate([
+      { $group: { _id: "$restaurantId", orders: { $sum: 1 }, revenue: { $sum: "$totalAmount" } } },
+      { $lookup: { from: "restaurants", localField: "_id", foreignField: "_id", as: "restaurant" } },
+      { $unwind: "$restaurant" },
+      { $project: { restaurantName: "$restaurant.name", orders: 1, revenue: 1, _id: 0 } },
+      { $sort: { orders: -1 } },
+      { $limit: 20 }
+    ]);
 
     res.status(200).json({ success: true, data });
   } catch (error) {

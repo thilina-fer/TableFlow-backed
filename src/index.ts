@@ -11,7 +11,7 @@ import registerRouter from "./routes/public/register.routes";
 import uploadRouter from "./routes/public/upload.routes";
 import registrationsRouter from "./routes/superadmin/registrations.routes";
 import superadminAnalyticsRouter from "./routes/superadmin/analytics.routes";
-import superadminRestaurantsRouter from "./routes/superadmin/restaurant.routes";
+import superadminRestaurantsRouter from "./routes/superadmin/restaurants.routes";
 import superadminAuditLogRouter from "./routes/superadmin/auditLog.routes";
 import staffAuthRouter from "./routes/restaurant/auth.routes";
 import categoriesRouter from "./routes/restaurant/category.routes";
@@ -24,6 +24,7 @@ import kitchenRouter from "./routes/restaurant/kitchen.routes";
 import waiterRouter from "./routes/restaurant/waiter.routes";
 import cashierRouter from "./routes/restaurant/cashier.routes";
 import analyticsRouter from "./routes/restaurant/analytics.routes";
+import onboardingRouter from "./routes/restaurant/onboarding.routes";
 import { initSocket } from "./sockets/socket";
 
 const app = express();
@@ -63,6 +64,7 @@ app.use("/api/payment", paymentPublicRouter);
 app.use("/api/kitchen", kitchenRouter);
 app.use("/api/waiter", waiterRouter);
 app.use("/api/cashier", cashierRouter);
+app.use("/api/admin/onboarding", onboardingRouter);
 
 // Error handler (last eke thiyanawa)
 app.use(errorHandler);
